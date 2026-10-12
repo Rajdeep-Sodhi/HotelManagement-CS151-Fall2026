@@ -40,4 +40,37 @@ public class Room {
     public boolean isAvailable() {
         return available;
     }
+
+        // Updates the room number if it is valid
+    public void setRoomNumber(int roomNumber) {
+        if (roomNumber > 0) {
+            this.roomNumber = roomNumber;
+        }
+    }
+
+    // Updates the room type if a type was provided
+    public void setRoomType(String roomType) {
+        if (roomType != null && !roomType.trim().isEmpty()) {
+            this.roomType = roomType;
+        }
+    }
+
+    // Makes sure the nightly rate cannot be negative
+    public void setNightlyRate(double nightlyRate) {
+        if (nightlyRate >= 0) {
+            this.nightlyRate = nightlyRate;
+        }
+    }
+
+    // Makes sure every room can hold at least one guest
+    public void setCapacity(int capacity) {
+        if (capacity > 0) {
+            this.capacity = capacity;
+        }
+    }
+
+    // Updates the current availability of the room
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
 }
