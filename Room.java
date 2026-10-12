@@ -73,4 +73,46 @@ public class Room {
     public void setAvailable(boolean available) {
         this.available = available;
     }
+        // Marks the room as occupied when a guest checks in
+    public void markOccupied() {
+        if (available) {
+            available = false;
+        }
+    }
+
+    // Makes the room available again after a guest checks out
+    public void markAvailable() {
+        if (!available) {
+            available = true;
+        }
+    }
+
+    // Checks if the room has enough space for the number of guests
+    public boolean canAccommodate(int numberOfGuests) {
+        if (numberOfGuests <= 0) {
+            return false;
+        }
+
+        return numberOfGuests <= capacity;
+    }
+
+    // Calculates the total room cost for the number of nights
+    public double calculateStayCost(int numberOfNights) {
+        if (numberOfNights <= 0) {
+            return 0;
+        }
+
+        return nightlyRate * numberOfNights;
+    }
+
+    // Displays the main details of the room
+    @Override
+    public String toString() {
+        return "Room " + roomNumber
+                + " | Type: " + roomType
+                + " | Nightly Rate: $" + nightlyRate
+                + " | Capacity: " + capacity
+                + " | Available: " + available;
+    }
+
 }
