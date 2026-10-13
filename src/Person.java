@@ -4,11 +4,11 @@ public abstract class Person {
     private String name;
     private int age;
     private String gender;
-    private int phoneNumber;
+    private String phoneNumber;
     private String email;
 
     // Initializes the information for a subclass of Person
-    protected Person(String name, int age, String gender, int phoneNumber, String email) {
+    protected Person(String name, int age, String gender, String phoneNumber, String email) {
         this.name = name;
         this.age = age;
         this.gender = gender;
@@ -32,7 +32,7 @@ public abstract class Person {
     }
 
     // Returns the person's phone number
-    public int getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
@@ -42,7 +42,7 @@ public abstract class Person {
     }
 
     // Updates the person's phone number
-    public void updatePhoneNumber(int phoneNumber) {
+    public void updatePhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
