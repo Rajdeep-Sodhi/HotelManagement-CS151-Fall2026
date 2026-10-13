@@ -57,6 +57,21 @@ public class Reservation {
     public double calculateTotal() {
         return room.calculateStayCost(checkOutDate - checkInDate);
     }
+    
+    public void rescheduleReservation(int newCheckInDate, int newCheckOutDate)
+    {
+		if(newCheckOutDate <= newCheckInDate)
+		{
+			throw new IllegalArgumentException("Check out should be after check in.");
+			
+		}
+		if((long) newCheckOutDate - newCheckInDate > Integer.MAX_VALUE)
+		{
+			throw new IllegalArgumentException("The stay is too long");
+		}
+		checkInDate = newCheckInDate;
+		checkOutDate = newCheckOutDate;
+	}
 
     // Displays the reservation and guest details
     public void displayInfo() {

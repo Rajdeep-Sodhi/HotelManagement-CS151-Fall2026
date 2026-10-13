@@ -3,7 +3,7 @@ public class Guest extends Person
 	private int guestId;
 	private Reservation reservation;
 	
-	public Guest(int guestIdIn, String nameIn, int ageIn, String genderIn, int phoneIn, String emailIn)
+	public Guest(int guestIdIn, String nameIn, int ageIn, String genderIn, String phoneIn, String emailIn)
 	{
 		super(nameIn, ageIn, genderIn, phoneIn, emailIn);
 		guestId = guestIdIn;
@@ -35,7 +35,7 @@ public class Guest extends Person
 			throw new IllegalStateException("There is no reservation to reschedule");
 			
 		}
-		reservation = new Reservation(reservation.getReservationID(), this, reservation.getRoom(), newCheckInDate, newCheckOutDate);
+		reservation.rescheduleReservation(newCheckInDate, newCheckOutDate);
 		return reservation;
 		
 	}
