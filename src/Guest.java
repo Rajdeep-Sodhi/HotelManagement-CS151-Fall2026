@@ -15,7 +15,7 @@ public class Guest extends Person
 		{
 			throw new IllegalStateException("This guest already has a reservation.");
 		}
-		reservation = new Reservation(resId, room, checkInDate, checkOutDate);
+		reservation = new Reservation(resId, this, room, checkInDate, checkOutDate);
 		return reservation;
 	}
 	
@@ -28,17 +28,36 @@ public class Guest extends Person
 		reservation = null;
 	}
 	
-	public void rescheduleReservation()
+	public Reservation rescheduleReservation(int newCheckInDate, int newCheckOutDate)
 	{
+		if(reservation == null)
+		{
+			throw new IllegalStateException("There is no reservation to reschedule");
+			
+		}
+		reservation = new Reservation(reservation.getReservationID(), this, reservation.getRoom(), newCheckInDate, newCheckOutDate);
+		return reservation;
+		
+	}
+	
+	public Reservation getReservation()
+	{
+		return reservation;
 	}
 	
 	public int getGuestID()
 	{
-		return guestID;
+		return guestId;
 	}
 	
 	public void setGuestID(int guestIDin)
 	{
 		guestId = guestIDin;
+	}
+	
+	public void displayInfo()
+	{
+		super.displayInfo();
+		System.out.println("Guest Id: " + guestId);
 	}
 }
