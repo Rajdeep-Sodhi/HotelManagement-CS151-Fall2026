@@ -8,7 +8,7 @@ public class Employee extends Person {
     private boolean onDuty;
 
     // Creates an employee with the information provided
-    public Employee(String name, int age, String gender, int phoneNumber, String email,
+    public Employee(String name, int age, String gender, String phoneNumber, String email,
                     int employeeID, String position, double salary, String shift) {
         super(name, age, gender, phoneNumber, email);
 

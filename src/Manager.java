@@ -8,7 +8,7 @@ public class Manager extends Employee {
     private List<Employee> employees;
 
     // Creates a manager with the information provided
-    public Manager(String name, int age, String gender, int phoneNumber, String email,
+    public Manager(String name, int age, String gender, String phoneNumber, String email,
                    int employeeID, double salary, String shift, String department) {
         super(name, age, gender, phoneNumber, email, employeeID, "Manager", salary, shift);
         this.department = department;
