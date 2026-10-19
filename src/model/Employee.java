@@ -1,3 +1,5 @@
+package model;
+
 public class Employee extends Person {
 
     // Basic information for each hotel employee

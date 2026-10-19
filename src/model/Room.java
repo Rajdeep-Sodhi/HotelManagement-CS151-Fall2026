@@ -1,3 +1,5 @@
+package model;
+
 public class Room {
 
     // Basic information for each hotel room

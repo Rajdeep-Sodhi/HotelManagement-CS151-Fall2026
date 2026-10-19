@@ -1,3 +1,5 @@
+package model;
+
 public class Reservation {
 
     // Basic information for each reservation

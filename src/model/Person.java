@@ -1,3 +1,5 @@
+package model;
+
 public abstract class Person {
 
     // Basic information shared by guests and employees
