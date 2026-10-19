@@ -1,3 +1,5 @@
+package model;
+
 public class Payment implements Payable {
 
     // Basic information for each payment

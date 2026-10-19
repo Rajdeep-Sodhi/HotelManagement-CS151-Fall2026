@@ -1,3 +1,5 @@
+package model;
+
 public class Guest extends Person
 {
 	private int guestId;
