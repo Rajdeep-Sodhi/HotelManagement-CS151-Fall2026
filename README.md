@@ -9,45 +9,45 @@ Cash and card payments are simulated. Application data is stored in memory and r
 DEVELOPERS
 
 Yash:
-    src/app/Main.java
-    src/model/Hotel.java
-    src/model/Guest.java
-    src/model/Reservation.java
-    src/model/Session.java
-    src/ui/Login.java
-    src/exception/BookingConflictException.java
-    src/exception/AuthorizationException.java
-    test/model/HotelTest.java
-    test/ui/LoginTest.java
-    README
+-src/app/Main.java
+-src/model/Hotel.java
+-src/model/Guest.java
+-src/model/Reservation.java
+-src/model/Session.java
+-src/ui/Login.java
+-src/exception/BookingConflictException.java
+-src/exception/AuthorizationException.java
+-test/model/HotelTest.java
+-test/ui/LoginTest.java
+-README
 
 Raj:
-    src/model/Payment.java
-    src/model/CardPayment.java
-    src/model/Account.java
-    src/ui/InputHelper.java
-    src/exception/HotelException.java
-    src/exception/InvalidOperationException.java
-    test/model/PaymentServiceTest.java
-    test/model/AuthorizationReportTest.java
-    test/ui/InputHelperTest.java
-    UML diagram
+-src/model/Payment.java
+-src/model/CardPayment.java
+-src/model/Account.java
+-src/ui/InputHelper.java
+-src/exception/HotelException.java
+-src/exception/InvalidOperationException.java
+-test/model/PaymentServiceTest.java
+-test/model/AuthorizationReportTest.java
+-test/ui/InputHelperTest.java
+-UML diagram
 
 Christy
-    src/model/Employee.java
-    src/model/Room.java
-    src/model/Payable.java
-    src/exception/DuplicateEntityException.java
-    src/exception/CapacityExceededException.java
-    test/model/StaffRoomTest.java
+-src/model/Employee.java
+-src/model/Room.java
+-src/model/Payable.java
+-src/exception/DuplicateEntityException.java
+-src/exception/CapacityExceededException.java
+-test/model/StaffRoomTest.java
 
 Bhoomika:
-    src/model/Manager.java
-    src/model/ServiceOrder.java
-    src/model/CashPayment.java
-    src/ui/ExitRequestedException.java
-    src/exception/PaymentDeclinedException.java
-    test/model/GuestReservationTest.java
+-src/model/Manager.java
+-src/model/ServiceOrder.java
+-src/model/CashPayment.java
+-src/ui/ExitRequestedException.java
+-src/exception/PaymentDeclinedException.java
+-test/model/GuestReservationTest.java
 
 
 DESIGN
