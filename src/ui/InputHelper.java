@@ -51,7 +51,7 @@ public class InputHelper{
                                 return value;
                             }
 
-                            System.out.println("Enter anumber from " + minimum + " to " + maximum + ".");
+                            System.out.println("Enter a number from " + minimum + " to " + maximum + ".");
 
                         } catch (NumberFormatException e)
                         {
