@@ -637,17 +637,15 @@ public class Hotel
 	}
 
 	// checks if reservation has service orders
-	boolean hasOpenServiceOrders(Reservation res)
+	boolean hasUnresolvedServiceOrders(Reservation res, Session sess) throws HotelException
 	{
 		for (ServiceOrder order : orderMap.values())
 		{
-			if (order.reservation() == res
-					&& "OPEN".equals(order.status()))
+			if (order.reservation() == res && ("OPEN".equals(order.status()) || order.getAmountDue(sess) > 0.0))
 			{
 				return true;
 			}
 		}
-
 		return false;
 	}
 
