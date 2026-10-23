@@ -93,5 +93,77 @@ class AuthorizationTest
 		{
 		}
 	}
+	
+	//tests that regular employees can't do manager actions
+	@Test
+	void blocksStaffFromManagerActionsTest() throws HotelException
+	{
+		Session empSession = hotel.login("employee", "employee123");
+		Room room = hotel.findRoom(101, empSession);
+
+		try
+		{
+			hotel.hireEmployee(
+					"New Staff", "new@hotel.example", false, empSession);
+
+			fail("Regular staff should not hire employees.");
+		}
+		catch (AuthorizationException ex)
+		{
+		
+		}
+
+		try
+		{
+			hotel.addRoom(301, 2, 90.00, empSession);
+			fail("Regular staff should not add rooms.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			hotel.removeRoom(101, empSession);
+			fail("Regular staff should not remove rooms.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			room.takeOutOfService(empSession);
+			fail("Regular staff should not take rooms out of service.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			hotel.summary(empSession);
+			fail("Regular staff should not access the manager report.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			hotel.advanceDate(
+					hotel.getCurrentDate().plusDays(1), empSession);
+
+			fail("Regular staff should not advance the date.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+	}
 
 }
