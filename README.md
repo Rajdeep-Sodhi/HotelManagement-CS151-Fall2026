@@ -19,7 +19,7 @@ Yash
 - `test/model/GuestReservationTest.java`
 - `test/model/AuthorizationTest.java`
 - `README.md`
-- 'pom.xml'
+- `pom.xml`
 
 Raj
 - `src/model/Payable.java`
@@ -47,6 +47,7 @@ Bhoomika
 - `src/exception/AuthorizationException.java`
 - `test/model/HotelTest.java`
 - `test/model/PaymentServiceTest.java`
+-`README.md`
 
   ## Contributions
 
@@ -74,12 +75,11 @@ All fields are private. Authorized getters protect personal and billing informat
 
 ## Installation Instructions
 
-Download the repository from `https://github.com/Rajdeep-Sodhi/CS151-Hotel_Management` or clone it:
+Download the repository from `https://github.com/Rajdeep-Sodhi/HotelManagement-CS151-Fall2026` or clone it:
 
 ```bash
-git clone https://github.com/Rajdeep-Sodhi/CS151-Hotel_Management.git
+git clone https://github.com/Rajdeep-Sodhi/HotelManagement-CS151-Fall2026.git
 cd HotelManagement-CS151-Fall2026
-```
 
 Install JDK 17 or newer. Maven is needed to run the JUnit 5 tests.
 
