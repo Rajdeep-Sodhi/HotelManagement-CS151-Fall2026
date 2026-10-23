@@ -1,120 +1,169 @@
 package model;
 
+import exception.AuthorizationException;
+import exception.HotelException;
+
 public class Room {
 
-    // Basic information for each hotel room
-    private int roomNumber;
-    private String roomType;
-    private double nightlyRate;
-    private int capacity;
-    private boolean available;
+    // Represents physical readiness separately from the reservation calendar.
+    private static final String READY = "READY";
+    private static final String OCCUPIED = "OCCUPIED";
+    private static final String DIRTY = "DIRTY";
+    private static final String CLEANING = "CLEANING";
+    private static final String OUT_OF_SERVICE = "OUT_OF_SERVICE";
 
-    // Creates a room with the information provided
-    public Room(int roomNumber, String roomType, double nightlyRate, int capacity) {
-        this.roomNumber = roomNumber;
-        this.roomType = roomType;
-        this.nightlyRate = nightlyRate;
+    private final int roomNumber; // Positive, unique room number.
+    private final int capacity; // Maximum positive number of occupants.
+    private double nightlyRate; // Positive nightly rate rounded to cents.
+    private String status; // READY, OCCUPIED, DIRTY, CLEANING, or OUT_OF_SERVICE; use String, not enum.
+    private String previousStatus; // READY or DIRTY state to restore after maintenance.
+    private final Hotel hotel; // Owning hotel used to check active reservations.
+
+    /* Validate positive number/capacity, finite positive rate, and round the rate to cents;
+       start in READY state. */
+    Room(int number, int capacity, double rate, Hotel hotel) throws HotelException {
+        if (number <= 0){
+            throw new HotelException("Room number must be positive.");
+        }
+        if (capacity <= 0){
+            throw new HotelException("Room capacity must be positive.");
+        }
+        if (hotel == null) {
+            throw new HotelException("A room must belong to a hotel.");
+        }
+
+        this.roomNumber = number;
         this.capacity = capacity;
-        this.available = true;
+        this.nightlyRate = validRate(rate);
+        this.status = READY;
+        this.previousStatus = null;
+        this.hotel = hotel;
     }
 
-    // Returns the room number
+    /* On-duty staff change DIRTY to CLEANING. */
+    public void startCleaning(Session actor) throws HotelException {
+        requireSession(actor).requireOnDutyStaff();
+        if (!status.equals(DIRTY)) {
+            throw new HotelException("Only a DIRTY room can be cleaned. Room " + roomNumber + " is " + status + ".");
+        }
+        status = CLEANING;
+    }
+
+    /* On-duty staff change CLEANING to READY. */
+    public void finishCleaning(Session actor) throws HotelException {
+        requireSession(actor).requireOnDutyStaff();
+        if (!status.equals(CLEANING)) {
+            throw new HotelException("Room " + roomNumber + " is not being cleaned.");
+        }
+        status = READY;
+    }
+
+    /* Manager changes READY/DIRTY to OUT_OF_SERVICE only if Hotel has no active booking for
+       this room; remember the prior readiness state. */
+    public void takeOutOfService(Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        if (!status.equals(READY) && !status.equals(DIRTY)) {
+            throw new HotelException("Only a READY or DIRTY room can be taken out of service. Room "
+                    + roomNumber + " is " + status + ".");
+        }
+        if (hotel.hasActiveReservation(this)) {
+            throw new HotelException("Room " + roomNumber + " has an active reservation.");
+        }
+        previousStatus = status;
+        status = OUT_OF_SERVICE;
+    }
+
+    /* Manager restores the saved READY/DIRTY state. */
+    public void returnToService(Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        if (!status.equals(OUT_OF_SERVICE)) {
+            throw new HotelException("Room " + roomNumber + " is not out of service.");
+        }
+        status = previousStatus;
+        previousStatus = null;
+    }
+
+    /* Manager validates a new price; existing booking quotes stay fixed. */
+    public void setNightlyRate(double rate, Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        nightlyRate = validRate(rate);
+    }
+
+    /* Return the immutable, non-sensitive room number. */
     public int getRoomNumber() {
         return roomNumber;
     }
 
-    // Returns the type of room
-    public String getRoomType() {
-        return roomType;
-    }
-
-    // Returns the price of the room per night
-    public double getNightlyRate() {
-        return nightlyRate;
-    }
-
-    // Returns the maximum number of guests allowed
-    public int getCapacity() {
+    /* Require active login before returning the maximum occupancy. */
+    public int getCapacity(Session viewer) throws HotelException {
+        requireSession(viewer).requireAuthenticated();
         return capacity;
     }
 
-    // Checks if the room is currently available
-    public boolean isAvailable() {
-        return available;
+    /* Require active login before returning the current price. */
+    public double getNightlyRate(Session viewer) throws HotelException {
+        requireSession(viewer).requireAuthenticated();
+        return nightlyRate;
     }
 
-        // Updates the room number if it is valid
-    public void setRoomNumber(int roomNumber) {
-        if (roomNumber > 0) {
-            this.roomNumber = roomNumber;
+    /* Require active login before returning the room's readiness state. */
+    public String getStatus(Session viewer) throws HotelException {
+        requireSession(viewer).requireAuthenticated();
+        return status;
+    }
+
+    /* Package-private transition from READY to OCCUPIED used by validated check-in. */
+    void markOccupied() throws HotelException {
+        if (!status.equals(READY)) {
+            throw new HotelException("Room " + roomNumber + " is not ready. It is " + status + ".");
         }
+        status = OCCUPIED;
     }
 
-    // Updates the room type if a type was provided
-    public void setRoomType(String roomType) {
-        if (roomType != null && !roomType.trim().isEmpty()) {
-            this.roomType = roomType;
+    /* Package-private transition from OCCUPIED to DIRTY used by validated checkout. */
+    void markDirty() throws HotelException {
+        if (!status.equals(OCCUPIED)) {
+            throw new HotelException("Room " + roomNumber + " is not occupied.");
         }
+        status = DIRTY;
     }
 
-    // Makes sure the nightly rate cannot be negative
-    public void setNightlyRate(double nightlyRate) {
-        if (nightlyRate >= 0) {
-            this.nightlyRate = nightlyRate;
+    /* Package-private capacity used during validated booking creation. */
+    int capacity() {
+        return capacity;
+    }
+
+    /* Package-private price used to capture a booking quote. */
+    double rate() {
+        return nightlyRate;
+    }
+
+    /* Package-private readiness state used by booking and maintenance checks. */
+    String status() {
+        return status;
+    }
+
+    // Rounds the rate to cents and rejects a rate that is zero after rounding
+    private static double validRate(double rate) throws HotelException {
+        double rounded = Hotel.roundMoney(rate);
+        if (rounded <= 0) {
+            throw new HotelException("Nightly rate must be greater than zero.");
         }
+        return rounded;
     }
 
-    // Makes sure every room can hold at least one guest
-    public void setCapacity(int capacity) {
-        if (capacity > 0) {
-            this.capacity = capacity;
+    // Rejects a missing session before any permission check
+    private static Session requireSession(Session session) throws AuthorizationException {
+        if (session == null) {
+            throw new AuthorizationException("You must be logged in.");
         }
+        return session;
     }
 
-    // Updates the current availability of the room
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
-        // Marks the room as occupied when a guest checks in
-    public void markOccupied() {
-        if (available) {
-            available = false;
-        }
-    }
-
-    // Makes the room available again after a guest checks out
-    public void markAvailable() {
-        if (!available) {
-            available = true;
-        }
-    }
-
-    // Checks if the room has enough space for the number of guests
-    public boolean canAccommodate(int numberOfGuests) {
-        if (numberOfGuests <= 0) {
-            return false;
-        }
-
-        return numberOfGuests <= capacity;
-    }
-
-    // Calculates the total room cost for the number of nights
-    public double calculateStayCost(int numberOfNights) {
-        if (numberOfNights <= 0) {
-            return 0;
-        }
-
-        return nightlyRate * numberOfNights;
-    }
-
-    // Displays the main details of the room
+    /* Display room number, capacity, readiness, and current nightly rate. */
     @Override
     public String toString() {
-        return "Room " + roomNumber
-                + " | Type: " + roomType
-                + " | Nightly Rate: $" + nightlyRate
-                + " | Capacity: " + capacity
-                + " | Available: " + available;
+        return String.format("Room %d | Capacity: %d | Status: %s | Nightly Rate: $%.2f",
+                roomNumber, capacity, status, nightlyRate);
     }
-
 }
