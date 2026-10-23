@@ -47,7 +47,7 @@ Bhoomika
 - `src/exception/AuthorizationException.java`
 - `test/model/HotelTest.java`
 - `test/model/PaymentServiceTest.java`
--`README.md`
+- `README.md`
 
   ## Contributions
 
