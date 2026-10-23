@@ -240,5 +240,61 @@ class AuthorizationTest
 		
 		}
 	}
+	
+	//// Checks that guest data stays private and returned lists cannot be changed.
+	@Test
+	void protectsGuestDataTest() throws HotelException
+	{
+		Session guestSession = hotel.login("guest", "guest123");
+		Guest guest = hotel.findGuest(1, guestSession);
+
+		List<Reservation> oldResList = guest.getReservations(guestSession);
+
+		Reservation res = guest.makeReservation(101, hotel.getCurrentDate().plusDays(1), hotel.getCurrentDate().plusDays(2), 1, guestSession);
+
+		assertTrue(oldResList.isEmpty());
+
+		try
+		{
+			guest.getReservations(guestSession).clear();
+			fail("The returned reservation list should be read-only.");
+		}
+		catch (UnsupportedOperationException ex)
+		{
+			
+		}
+
+		assertFalse(guest.toString().contains(guest.getEmail(guestSession)));
+		assertFalse(res.toString().contains(guest.getEmail(guestSession)));
+
+		Session otherSession = hotel.login("guest2", "guest234");
+
+		try
+		{
+			guest.getPhone(otherSession);
+			fail("Another guest should not access this phone number.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			res.getArrival(otherSession);
+			fail("Another guest should not access this arrival date.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		Session mgrSession = hotel.login("manager", "manager123");
+		String report = hotel.summary(mgrSession);
+
+		assertTrue(report.contains("reservations: 1"));
+		assertFalse(report.contains("guest@hotel.example"));
+		assertFalse(hotel.toString().contains("guest123"));
+	}
 
 }

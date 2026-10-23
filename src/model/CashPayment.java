@@ -46,7 +46,7 @@ public final class CashPayment extends Payment
 	//call's super's toString() method.
 	@Override
 	public String toString()
-	{.
+	{
 		return super.toString();
 	}
 }
