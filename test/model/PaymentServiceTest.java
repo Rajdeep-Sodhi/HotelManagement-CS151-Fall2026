@@ -108,65 +108,71 @@ class PaymentServiceTest
 
     // Checks a completed service order can be paid successfully by card.
     @Test
-    void completedServiceOrderCanBePaidTest() throws HotelException
-    {
-        ServiceOrder order = hotel.createServiceOrder(
-                reservation.getReservationId(),
-                "ROOM_SERVICE",
-                2,
-                guestSession);
+	void completedServiceOrderCanBePaidTest() throws HotelException
+	{
+		ServiceOrder order = hotel.createServiceOrder(
+				reservation.getReservationId(),
+				"ROOM_SERVICE",
+				2,
+				guestSession);
 
-        order.complete(guestSession);
+		employeeSession = hotel.login("employee", "employee123");
+		order.complete(employeeSession);
+		guestSession = hotel.login("guest", "guest123");
 
-        Payment payment = hotel.payCard(order, true, guestSession);
+		Payment payment = hotel.payCard(order, true, guestSession);
 
-        assertEquals(0.0, order.getAmountDue(guestSession), 0.001);
-        assertTrue(payment.receipt(guestSession).contains("40.00"));
-    }
+		assertEquals(0.0, order.getAmountDue(guestSession), 0.001);
+		assertTrue(payment.receipt(guestSession).contains("40.00"));
+	}
 
-    // A declined card should not mark the service order as paid.
-    @Test
-    void declinedCardLeavesOrderUnpaidTest() throws HotelException
-    {
-        ServiceOrder order = hotel.createServiceOrder(
-                reservation.getReservationId(),
-                "LAUNDRY",
-                2,
-                guestSession);
+   	// A declined card should not mark the service order as paid.
+	@Test
+	void declinedCardLeavesOrderUnpaidTest() throws HotelException
+	{
+		ServiceOrder order = hotel.createServiceOrder(
+				reservation.getReservationId(),
+				"LAUNDRY",
+				2,
+				guestSession);
 
-        order.complete(guestSession);
+		employeeSession = hotel.login("employee", "employee123");
+		order.complete(employeeSession);
+		guestSession = hotel.login("guest", "guest123");
 
-        try
-        {
-            hotel.payCard(order, false, guestSession);
-            fail("A declined card should not complete payment.");
-        }
-        catch (HotelException ex)
-        {
+		try
+		{
+			hotel.payCard(order, false, guestSession);
+			fail("A declined card should not complete payment.");
+		}
+		catch (HotelException ex)
+		{
 
-        }
+		}
 
-        assertEquals(20.00, order.getAmountDue(guestSession), 0.001);
-    }
+		assertEquals(20.00, order.getAmountDue(guestSession), 0.001);
+	}
 
     // Checks cash payments and verifies change on the receipt.
-    @Test
-    void cashPaymentReturnsCorrectChangeTest() throws HotelException
-    {
-        ServiceOrder order = hotel.createServiceOrder(
-                reservation.getReservationId(),
-                "ROOM_SERVICE",
-                1,
-                guestSession);
+	@Test
+	void cashPaymentReturnsCorrectChangeTest() throws HotelException
+	{
+		ServiceOrder order = hotel.createServiceOrder(
+				reservation.getReservationId(),
+				"ROOM_SERVICE",
+				1,
+				guestSession);
 
-        order.complete(guestSession);
+		employeeSession = hotel.login("employee", "employee123");
+		order.complete(employeeSession);
+		guestSession = hotel.login("guest", "guest123");
 
-        Payment payment = hotel.payCash(order, 25.00, guestSession);
-        String receipt = payment.receipt(guestSession);
+		Payment payment = hotel.payCash(order, 25.00, guestSession);
+		String receipt = payment.receipt(guestSession);
 
-        assertTrue(receipt.contains("20.00"));
-        assertTrue(receipt.contains("change=5.00"));
-    }
+		assertTrue(receipt.contains("20.00"));
+		assertTrue(receipt.contains("change=5.00"));
+	}
 
     // Makes sure an order cannot be paid before it is completed.
     @Test

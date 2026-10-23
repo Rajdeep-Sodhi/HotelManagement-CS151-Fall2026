@@ -148,27 +148,32 @@ class LoginTest {
         assertEquals("CANCELLED", reservation.getStatus(guestSession));
     }
 
-    // What happens: A checked-in guest creates an order, edits it, completes it, pays, and views the receipt.
-    // Expected: Item changes affect the balance and the completed order is paid in full.
-    @Test
-    void serviceOrderEditingAndPaymentAreAvailable() throws Exception {
-        Reservation reservation = createCheckedInReservations(101)[0];
-        String output = run("1\nguest\nguest123\n"
-                + "1\n6\n1\n1\nLAUNDRY\n2\n"
-                + "1\n6\n1\n4\n1\nROOM_SERVICE\n1\n"
-                + "1\n6\n1\n5\n1\nLAUNDRY\n1\n"
-                + "1\n6\n1\n6\n1\n"
-                + "1\n6\n1\n3\n1\n"
-                + "1\n6\n1\n2\n1\n1\n35.00\n"
-                + "5\n2\n0\n0\n");
-        assertTrue(output.contains("Amount due: $40.00"), output);
-        assertTrue(output.contains("Amount due: $30.00"), output);
-        assertTrue(output.contains("change=5.00"), output);
-        assertTrue(output.contains("Payment ID: 2"), output);
-        Session guestSession = hotel.login("guest", "guest123");
-        ServiceOrder order = hotel.getServiceOrders(reservation, guestSession).get(0);
-        assertEquals(0.0, order.getAmountDue(guestSession), 0.001);
-    }
+    // What happens: A guest creates and edits an order, staff complete it, then the guest pays and views the receipt.
+	// Expected: Item changes affect the balance and the completed order is paid in full.
+	@Test
+	void serviceOrderEditingAndPaymentAreAvailable() throws Exception
+	{
+		Reservation reservation = createCheckedInReservations(101)[0];
+		String output = run("1\nguest\nguest123\n"
+				+ "1\n6\n1\n1\nLAUNDRY\n2\n"
+				+ "1\n6\n1\n4\n1\nROOM_SERVICE\n1\n"
+				+ "1\n6\n1\n5\n1\nLAUNDRY\n1\n"
+				+ "1\n6\n1\n6\n1\n"
+				+ "0\n1\nemployee\nemployee123\n10\n1\n3\n1\n0\n"
+				+ "1\nguest\nguest123\n"
+				+ "1\n6\n1\n2\n1\n1\n35.00\n"
+				+ "5\n2\n0\n0\n");
+
+		assertTrue(output.contains("Amount due: $40.00"), output);
+		assertTrue(output.contains("Amount due: $30.00"), output);
+		assertTrue(output.contains("change=5.00"), output);
+		assertTrue(output.contains("Payment ID: 2"), output);
+
+		Session guestSession = hotel.login("guest", "guest123");
+		ServiceOrder order = hotel.getServiceOrders(reservation, guestSession).get(0);
+
+		assertEquals(0.0, order.getAmountDue(guestSession), 0.001);
+	}
 
     // What happens: A guest tries to edit an order belonging to a different one of their stays,
     // then cancels the order from the correct stay's menu.
