@@ -188,6 +188,28 @@ class GuestReservationTest
 
 		assertEquals("CONFIRMED", res.getStatus(session));
 	}
+	
+	// checks if cancelling a room reservation opens room, but makes sure reservation was stored in history
+	@Test
+	void keepsBookingHistoryTest() throws HotelException
+	{
+		LocalDate today = hotel.getCurrentDate();
+
+		Reservation cancelledRes = guest.makeReservation(101, today.plusDays(1), today.plusDays(2), 1, session);
+
+		Reservation otherRes = guest.makeReservation(102, today.plusDays(3), today.plusDays(4), 2, session);
+
+		guest.cancelReservation(cancelledRes, session);
+
+		Reservation newRes = guest.makeReservation(101, today.plusDays(1), today.plusDays(2), 1, session);
+
+		List<Reservation> resList = guest.getReservations(session);
+
+		assertEquals(3, resList.size());
+		assertEquals("CANCELLED", cancelledRes.getStatus(session));
+		assertEquals("CONFIRMED", newRes.getStatus(session));
+		assertEquals("CONFIRMED", otherRes.getStatus(session));
+	}
 
 
 
