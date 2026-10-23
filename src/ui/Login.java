@@ -85,8 +85,9 @@ public class Login {
         Employee employee = hotel.findEmployee(session.getPersonId(), session);
         System.out.println("\n1 - Clock in\n2 - Clock out\n3 - Check in\n4 - Check out\n"
                 + "5 - Clean room\n6 - Find guest\n7 - My employee profile\n"
-                + "8 - Register guest\n9 - View payment receipt\n0 - Logout");
-        int choice = input.readInt("Choose an option: ", 0, 9);
+                + "8 - Register guest\n9 - View payment receipt\n"
+                + "10 - Manage service orders\n11 - Mark reservation as no-show\n0 - Logout");
+        int choice = input.readInt("Choose an option: ", 0, 11);
         if (choice == 0) logout();
         else if (choice == 1) employee.clockIn(session);
         else if (choice == 2) employee.clockOut(session);
@@ -109,7 +110,18 @@ public class Login {
             Guest guest = hotel.registerGuest(input.readRequiredText("Guest name: "),
                     input.readRequiredText("Email: "), input.readRequiredText("Phone: "), session);
             System.out.println("Guest registered. Guest ID: " + guest.getGuestId());
-        } else viewPaymentReceipt();
+        } else if (choice == 9) {
+			viewPaymentReceipt();
+		} else if (choice == 10) {
+			Reservation reservation = hotel.findReservation(
+					id("Reservation ID: "), session);
+			serviceMenu(reservation);
+		} else if (choice == 11) {
+			Reservation reservation = hotel.findReservation(
+					id("Reservation ID: "), session);
+			reservation.markNoShow(session);
+			System.out.println("Reservation marked as no-show.");
+		}
     }
 
     // Provide management tools; each model operation still checks manager permissions.
@@ -199,10 +211,24 @@ public class Login {
         List<ServiceOrder> orders = hotel.getServiceOrders(reservation, session);
         if (orders.isEmpty()) System.out.println("No service orders for this reservation.");
         for (ServiceOrder order : orders) showServiceOrder(order);
-        System.out.println("1 - Create order\n2 - Pay order\n3 - Complete order\n"
-                + "4 - Add service item\n5 - Remove service item\n6 - View order\n7 - Cancel order\n0 - Back");
+        
+        boolean staff = !"GUEST".equals(session.getRole());
+        
+        System.out.println("1 - Create order\n2 - Pay order");
+
+		if (staff)
+		{
+			System.out.println("3 - Complete order");
+		}
+		System.out.println( "4 - Add service item\n5 - Remove service item\n" + "6 - View order\n7 - Cancel order\n0 - Back");
+		
         int choice = input.readInt("Choose an option: ", 0, 7);
         if (choice == 0) return;
+        
+        if (choice == 3 && !staff){
+			throw new HotelException("Only on-duty hotel staff can complete service orders.");
+		}
+		
         if (choice == 1) {
             ServiceOrder order = hotel.createServiceOrder(reservation.getReservationId(), input.readRequiredText("Service: "),
                     input.readInt("Quantity: ", 1, Integer.MAX_VALUE), session);

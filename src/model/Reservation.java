@@ -152,9 +152,9 @@ public class Reservation implements Payable {
         {
             throw new HotelException("Checkout is not allowed before the departure date, " + departure + ".");
         }
-        if (hotel.hasOpenServiceOrders(this))
+        if (hotel.hasUnresolvedServiceOrders(this,actor))
         {
-            throw new HotelException("Reservation " + reservationId + " still has open service orders.");
+            throw new HotelException("Reservation " + reservationId + " still has unresolved service orders.");
         }
         room.markDirty();
         status = "CHECKED_OUT";
@@ -166,7 +166,7 @@ public class Reservation implements Payable {
     public double getAmountDue(Session viewer) throws HotelException
     {
         requireAccess(viewer);
-        if (paid || status.equals("CANCELLED"))
+        if (paid || status.equals("CANCELLED") || status.equals("NO_SHOW"))
         {
             return 0.0;
         }
@@ -195,6 +195,29 @@ public class Reservation implements Payable {
         payment.process(this, getAmountDue(actor));
         paid = true;
     }
+    
+    //Checks for no shows to reservation
+    public void markNoShow(Session actor) throws HotelException
+	{
+		if (actor == null)
+		{
+			throw new AuthorizationException("You must be logged in.");
+		}
+
+		actor.requireOnDutyStaff();
+
+		if (!"CONFIRMED".equals(status))
+		{
+			throw new HotelException("Only a confirmed reservation can be marked as a no-show.");
+		}
+
+		if (hotel.getCurrentDate().isBefore(arrival))
+		{
+			throw new HotelException("A no-show can only be recorded on or after the arrival date.");
+		}
+
+		status = "NO_SHOW";
+	}
 
     /* Return the immutable, non-sensitive reservation ID. */
     public int getReservationId()

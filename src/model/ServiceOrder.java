@@ -158,6 +158,7 @@ public class ServiceOrder implements Payable
     public void complete(Session actor) throws HotelException
     {
         reservation.requireAccess(actor);
+        actor.requireOnDutyStaff();
 
         if (!status.equals("OPEN"))
         {
