@@ -119,6 +119,36 @@ class GuestReservationTest
 			
 		}
 	}
+	
+	// checks If changing reservation dates fail, original dates are kept
+	@Test
+	void keepsDatesAfterFailedChange() throws HotelException
+	{
+		LocalDate today = hotel.getCurrentDate();
+
+		Reservation firstRes = guest.makeReservation(
+				101, today.plusDays(1), today.plusDays(3), 1, session);
+
+		guest.makeReservation(
+				101, today.plusDays(5), today.plusDays(7), 1, session);
+
+		try
+		{
+			guest.rescheduleReservation(
+					firstRes, today.plusDays(6),
+					today.plusDays(8), session);
+
+			fail("Conflicting date changes should be rejected.");
+		}
+		catch (BookingConflictException ex)
+		{
+			
+		}
+
+		assertEquals(today.plusDays(1), firstRes.getArrival(session));
+		assertEquals(today.plusDays(3), firstRes.getDeparture(session));
+	}
+
 
 
 }
