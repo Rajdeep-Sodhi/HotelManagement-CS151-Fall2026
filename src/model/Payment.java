@@ -56,6 +56,10 @@ public abstract class Payment{
             return amount;
         }
 
+        protected final boolean isProcessed(){
+            return processed;
+        }
+
         /* Authorize through the purchase before displaying a processed payment's ID, amount,
             tender type, and cash change where applicable. */
         public String receipt(Session viewer) throws HotelException{
