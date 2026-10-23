@@ -391,6 +391,24 @@ public class Hotel
 		return order;
 	}
 
+	// Lists only orders belonging to an authorized, registered reservation.
+	public List<ServiceOrder> getServiceOrders(Reservation reservation, Session session)
+			throws HotelException
+	{
+		checkSession(session);
+		if (reservation == null || resMap.get(reservation.getReservationId()) != reservation)
+		{
+			throw new HotelException("The reservation is not registered at this hotel.");
+		}
+		reservation.requireAccess(session);
+		List<ServiceOrder> orders = new ArrayList<>();
+		for (ServiceOrder order : orderMap.values())
+		{
+			if (order.reservation() == reservation) orders.add(order);
+		}
+		return Collections.unmodifiableList(orders);
+	}
+
 	// handles cash payment process
 	public Payment payCash(Payable purchase, double cashPaid, Session session)
 			throws HotelException
