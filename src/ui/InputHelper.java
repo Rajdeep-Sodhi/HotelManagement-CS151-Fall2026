@@ -26,12 +26,12 @@ public class InputHelper{
                     System.out.print(prompt);
                     if (!scanner.hasNextLine())
                     {
-                        throw new ExitRequestException();
+                        throw new ExitRequestedException();
                     }
                     String line = scanner.nextLine();
                     if (line.trim().equalsIgnoreCase("EXIT"))
                     {
-                        throw new ExitRequestException();
+                        throw new ExitRequestedException();
                     }
                     return line;
                 }
@@ -51,7 +51,7 @@ public class InputHelper{
                                 return value;
                             }
 
-                            System.out.println("Enter anumber from " + minimum + " to " + maximum + ".");
+                            System.out.println("Enter a number from " + minimum + " to " + maximum + ".");
 
                         } catch (NumberFormatException e)
                         {
@@ -93,6 +93,11 @@ public class InputHelper{
                         catch (NumberFormatException e)
                         {
                             System.out.println("Enter an amount such as 25 or 25.50.");
+                            continue;
+                        }
+                        if (!Double.isFinite(value) || value < 0)
+                        {
+                            System.out.println("The amount must be a nonnegative number.");
                             continue;
                         }
                         double rounded = Math.round(value * 100.0) / 100.0;
