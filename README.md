@@ -29,7 +29,7 @@ Raj
 - `test/ui/LoginTest.java`
 - Root-level UML diagram (`uml.png` or `uml.pdf`)
 
-Christy
+Kristy
 - `src/model/Employee.java`
 - `src/model/Room.java`
 - `src/model/Reservation.java`
@@ -46,6 +46,18 @@ Bhoomika
 - `src/exception/AuthorizationException.java`
 - `test/model/HotelTest.java`
 - `test/model/PaymentServiceTest.java`
+
+  ## Contributions
+
+Yash focused on the central hotel workflow, guest functionality, cash payments, application startup, booking conflict handling, and related tests.
+
+Raj focused on the payment abstraction and interface, card payments, the console menu system, base hotel exceptions, login tests, and the final UML diagram.
+
+Kristy focused on employee and room operations, reservations, validated user input, capacity handling, and staff, room, and input tests.
+
+Bhoomika focused on account and session authorization, service orders, authorization and exit exceptions, hotel registry tests, and payment and service-order tests.
+
+All team members contributed to integration, debugging, design discussions, testing, and reviewing how the classes interact.
 
 ## Design
 
