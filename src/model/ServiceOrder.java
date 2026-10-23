@@ -154,5 +154,38 @@ public class ServiceOrder
             items.put(cleanItem, currentQuantity - quantity);
         }
     }
+        // Marks an open service order as completed.
+    public void complete(Session actor) throws HotelException
+    {
+        reservation.requireAccess(actor);
+
+        if (!status.equals("OPEN"))
+        {
+            throw new HotelException(
+                    "Only an open service order can be completed.");
+        }
+
+        status = "COMPLETED";
+    }
+
+    // Cancels an open service order before it has been paid.
+    public void cancel(Session actor) throws HotelException
+    {
+        reservation.requireAccess(actor);
+
+        if (!status.equals("OPEN"))
+        {
+            throw new HotelException(
+                    "Only an open service order can be cancelled.");
+        }
+
+        if (paid)
+        {
+            throw new HotelException(
+                    "A paid service order cannot be cancelled.");
+        }
+
+        status = "CANCELLED";
+    }
 
 }
