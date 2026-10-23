@@ -19,6 +19,7 @@ Yash
 - `test/model/GuestReservationTest.java`
 - `test/model/AuthorizationTest.java`
 - `README.md`
+- 'pom.xml'
 
 Raj
 - `src/model/Payable.java`
@@ -77,7 +78,7 @@ Download the repository from `https://github.com/Rajdeep-Sodhi/CS151-Hotel_Manag
 
 ```bash
 git clone https://github.com/Rajdeep-Sodhi/CS151-Hotel_Management.git
-cd CS151-Hotel_Management
+cd HotelManagement-CS151-Fall2026
 ```
 
 Install JDK 17 or newer. Maven is needed to run the JUnit 5 tests.
@@ -102,7 +103,7 @@ The second option runs the application without the JUnit tests. On Windows Comma
 
 ## Usage
 
-Start the program using either installation option. The application begins with two rooms, one manager account, one employee account, and two guest accounts. Demo logins are:
+Start the program using either installation option. The application begins with two rooms, one manager account, one employee account, and two guest accounts. Demo logins are(username / password):
 
 ```text
 manager  / manager123
