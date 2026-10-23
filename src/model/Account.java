@@ -59,4 +59,55 @@ public class Account
     {
         return password != null && this.password.equals(password);
     }
+
+        // Changes the password after checking that the old password is correct.
+    void changePassword(String oldPassword, String newPassword)
+            throws HotelException
+    {
+        if (!authenticate(oldPassword))
+        {
+            throw new HotelException("Current password is incorrect.");
+        }
+
+        if (newPassword == null || newPassword.length() < 6)
+        {
+            throw new HotelException(
+                    "New password must be at least 6 characters.");
+        }
+
+        password = newPassword;
+    }
+
+    // Used by Hotel to store and look up accounts.
+    String username()
+    {
+        return username;
+    }
+
+    // Returns the linked guest for guest accounts.
+    Guest guest()
+    {
+        return guest;
+    }
+
+    // Returns the linked employee for employee and manager accounts.
+    Employee employee()
+    {
+        return employee;
+    }
+
+    // Returns the role that was determined when the account was created.
+    String role()
+    {
+        return role;
+    }
+
+    // Displays basic account information without showing the password.
+    @Override
+    public String toString()
+    {
+        return "Account " + username + " | Role: " + role;
+    }
+
+
 }
