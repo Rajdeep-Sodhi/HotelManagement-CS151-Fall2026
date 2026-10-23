@@ -3,8 +3,10 @@ package model;
 import exception.AuthorizationException;
 import exception.HotelException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
-public class Reservation {
+
+public class Reservation implements Payable {
     // Links one guest, room, and date interval; owns its lifecycle and payment flag.
 
     private final int reservationId; // Immutable reservation identifier.
@@ -41,7 +43,14 @@ public class Reservation {
         {
             throw new HotelException("Departure must be after arrival.");
         }
-
+        if (partySize <= 0)
+        {
+            throw new HotelException("Party size must be at least 1.");
+        }
+        if (partySize > room.capacity())
+        {
+            throw new HotelException("Room " + room.getRoomNumber() + " holds at most " + room.capacity() + " guests.");
+        }
 
         this.reservationId = id;
         this.guest = guest;
@@ -51,6 +60,7 @@ public class Reservation {
         this.departure = departure;
         this.partySize = partySize;
         this.bookedNightlyRate = room.rate();
+        this.status = "CONFIRMED";
         this.paid = false;
     }
 
@@ -98,6 +108,92 @@ public class Reservation {
             throw new HotelException("Reservation " + reservationId + " is already paid and cannot be cancelled.");
         }
         status = "CANCELLED";
+    }
+
+
+    /* Require on-duty staff, CONFIRMED, paid, scheduled arrival today, and READY room; mark room OCCUPIED and booking CHECKED_IN. */
+    public void checkIn(Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
+        }
+        actor.requireOnDutyStaff();
+        if (!status.equals("CONFIRMED"))
+        {
+            throw new HotelException("Reservation " + reservationId + " cannot be checked in. It is " + status + ".");
+        }
+        if (!paid)
+        {
+            throw new HotelException("Reservation " + reservationId + " must be paid before check-in.");
+        }
+        if (!arrival.equals(hotel.getCurrentDate()))
+        {
+            throw new HotelException("Check-in is only allowed on the arrival date, " + arrival + ".");
+        }
+        room.markOccupied();
+        status = "CHECKED_IN";
+    }
+
+    /* Require on-duty staff, CHECKED_IN, today >= scheduled departure, and no OPEN service
+       orders; mark room DIRTY and booking CHECKED_OUT. */
+    public void checkOut(Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
+        }
+        actor.requireOnDutyStaff();
+        if (!status.equals("CHECKED_IN"))
+        {
+            throw new HotelException("Reservation " + reservationId + " is not checked in.");
+        }
+        if (hotel.getCurrentDate().isBefore(departure))
+        {
+            throw new HotelException("Checkout is not allowed before the departure date, " + departure + ".");
+        }
+        if (hotel.hasOpenServiceOrders(this))
+        {
+            throw new HotelException("Reservation " + reservationId + " still has open service orders.");
+        }
+        room.markDirty();
+        status = "CHECKED_OUT";
+    }
+
+    /* Authorized quote: round the number of nights times the booked nightly rate to cents;
+       return 0.0 if paid or cancelled. */
+    @Override
+    public double getAmountDue(Session viewer) throws HotelException
+    {
+        requireAccess(viewer);
+        if (paid || status.equals("CANCELLED"))
+        {
+            return 0.0;
+        }
+        long nights = ChronoUnit.DAYS.between(arrival, departure);
+        return Math.round(nights * bookedNightlyRate * 100.0) / 100.0;
+    }
+
+    /* Authorized, unpaid CONFIRMED booking; validate/process the matching full payment, then
+       set paid. Do not create another payment here. */
+    @Override
+    public void pay(Payment payment, Session actor) throws HotelException
+    {
+        requireAccess(actor);
+        if (!status.equals("CONFIRMED"))
+        {
+            throw new HotelException("Reservation " + reservationId + " cannot be paid. It is " + status + ".");
+        }
+        if (paid)
+        {
+            throw new HotelException("Reservation " + reservationId + " is already paid.");
+        }
+        if (payment == null)
+        {
+            throw new HotelException("A payment is required.");
+        }
+        payment.process(this, getAmountDue(actor));
+        paid = true;
     }
 
     /* Return the immutable, non-sensitive reservation ID. */
