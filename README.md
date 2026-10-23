@@ -37,7 +37,6 @@ Christy
 - `src/exception/CapacityExceededException.java`
 - `test/model/StaffRoomTest.java`
 - `test/ui/InputHelperTest.java`
-- `pom.xml` and `.gitignore`
 
 Bhoomika
 - `src/model/ServiceOrder.java`
