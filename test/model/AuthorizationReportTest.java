@@ -165,5 +165,29 @@ class AuthorizationTest
 			
 		}
 	}
+	
+	//checks if new singups create just guest accounts, not manager or employee
+	@Test
+	void signupCreatesGuestAccounts() throws HotelException
+	{
+		Guest newGuest = hotel.registerGuestAccount( "New Guest", "new@guest.example", "4085559876", "newguest", "newpass123");
+
+		Session session = hotel.login("newguest", "newpass123");
+
+		assertEquals("GUEST", session.getRole());
+		assertEquals(newGuest.getGuestId(), session.getPersonId());
+
+		try
+		{
+			hotel.hireEmployee(
+					"Unauthorized", "staff@hotel.example", true, session);
+
+			fail("A guest account should not have manager permissions.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+	}
 
 }
