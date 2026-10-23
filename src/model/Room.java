@@ -60,13 +60,34 @@ public class Room {
 
     /* Manager changes READY/DIRTY to OUT_OF_SERVICE only if Hotel has no active booking for
        this room; remember the prior readiness state. */
-    public void takeOutOfService(Session actor) throws HotelException
+    public void takeOutOfService(Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        if (!status.equals(READY) && !status.equals(DIRTY)) {
+            throw new HotelException("Only a READY or DIRTY room can be taken out of service. Room "
+                    + roomNumber + " is " + status + ".");
+        }
+        if (hotel.hasActiveReservation(this)) {
+            throw new HotelException("Room " + roomNumber + " has an active reservation.");
+        }
+        previousStatus = status;
+        status = OUT_OF_SERVICE;
+    }
 
     /* Manager restores the saved READY/DIRTY state. */
-    public void returnToService(Session actor) throws HotelException
+    public void returnToService(Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        if (!status.equals(OUT_OF_SERVICE)) {
+            throw new HotelException("Room " + roomNumber + " is not out of service.");
+        }
+        status = previousStatus;
+        previousStatus = null;
+    }
 
     /* Manager validates a new price; existing booking quotes stay fixed. */
-    public void setNightlyRate(double rate, Session actor) throws HotelException
+    public void setNightlyRate(double rate, Session actor) throws HotelException {
+        requireSession(actor).requireRole("MANAGER");
+        nightlyRate = validRate(rate);
+    }
 
     /* Return the immutable, non-sensitive room number. */
     public int getRoomNumber() {
