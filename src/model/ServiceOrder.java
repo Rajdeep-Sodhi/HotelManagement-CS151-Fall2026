@@ -72,4 +72,87 @@ public class ServiceOrder
 
         return cleanItem;
     }
+        // Adds another service or increases the quantity of an existing one.
+    public void addItem(String item, int quantity, Session actor)
+            throws HotelException
+    {
+        reservation.requireAccess(actor);
+
+        if (!status.equals("OPEN"))
+        {
+            throw new HotelException(
+                    "Items can only be added to an open service order.");
+        }
+
+        if (paid)
+        {
+            throw new HotelException(
+                    "A paid service order cannot be changed.");
+        }
+
+        if (quantity <= 0)
+        {
+            throw new HotelException("Service quantity must be positive.");
+        }
+
+        String cleanItem = cleanItem(item);
+        int currentQuantity = items.getOrDefault(cleanItem, 0);
+
+        // Prevent the quantity from overflowing an int.
+        if (currentQuantity > Integer.MAX_VALUE - quantity)
+        {
+            throw new HotelException("Service quantity is too large.");
+        }
+
+        items.put(cleanItem, currentQuantity + quantity);
+    }
+
+    // Removes a quantity of an item without leaving the order empty.
+    public void removeItem(String item, int quantity, Session actor)
+            throws HotelException
+    {
+        reservation.requireAccess(actor);
+
+        if (!status.equals("OPEN"))
+        {
+            throw new HotelException(
+                    "Items can only be removed from an open service order.");
+        }
+
+        if (paid)
+        {
+            throw new HotelException(
+                    "A paid service order cannot be changed.");
+        }
+
+        if (quantity <= 0)
+        {
+            throw new HotelException("Service quantity must be positive.");
+        }
+
+        String cleanItem = cleanItem(item);
+        Integer currentQuantity = items.get(cleanItem);
+
+        if (currentQuantity == null || quantity > currentQuantity)
+        {
+            throw new HotelException(
+                    "Cannot remove more items than were ordered.");
+        }
+
+        if (quantity == currentQuantity && items.size() == 1)
+        {
+            throw new HotelException(
+                    "A service order must contain at least one item.");
+        }
+
+        if (quantity == currentQuantity)
+        {
+            items.remove(cleanItem);
+        }
+        else
+        {
+            items.put(cleanItem, currentQuantity - quantity);
+        }
+    }
+
 }
