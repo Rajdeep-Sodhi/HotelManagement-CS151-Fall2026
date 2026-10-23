@@ -6,10 +6,6 @@ import java.time.LocalDate;
 
 public class Reservation {
     // Links one guest, room, and date interval; owns its lifecycle and payment flag.
-    private static final String CONFIRMED = "CONFIRMED";
-    private static final String CHECKED_IN = "CHECKED_IN";
-    private static final String CHECKED_OUT = "CHECKED_OUT";
-    private static final String CANCELLED = "CANCELLED";
 
     private final int reservationId; // Immutable reservation identifier.
     private final Guest guest; // Guest who owns the stay.
@@ -23,7 +19,7 @@ public class Reservation {
     private boolean paid; // True only after one successful full payment.
 
     /* Validate the guest, room, dates, and party size; capture the room's price and start CONFIRMED and unpaid. Booked dates use [arrival, departure), allowing adjacent stays. */
-        Reservation(int id, Guest guest, Room room, LocalDate arrival, LocalDate departure, int partySize, Hotel hotel) throws HotelException
+    Reservation(int id, Guest guest, Room room, LocalDate arrival, LocalDate departure, int partySize, Hotel hotel) throws HotelException
     {
         if (id <= 0)
         {
@@ -33,15 +29,19 @@ public class Reservation {
         {
             throw new HotelException("A reservation requires a guest, a room, and a hotel.");
         }
-        validateDates(arrival, departure, hotel);
-        if (partySize <= 0)
+        if (arrival == null || departure == null)
         {
-            throw new HotelException("Party size must be at least 1.");
+            throw new HotelException("Arrival and departure dates are required.");
         }
-        if (partySize > room.capacity())
+        if (arrival.isBefore(hotel.getCurrentDate()))
         {
-            throw new HotelException("Room " + room.getRoomNumber() + " holds at most " + room.capacity() + " guests.");
+            throw new HotelException("Arrival cannot be before today, " + hotel.getCurrentDate() + ".");
         }
+        if (!departure.isAfter(arrival))
+        {
+            throw new HotelException("Departure must be after arrival.");
+        }
+
 
         this.reservationId = id;
         this.guest = guest;
@@ -51,8 +51,53 @@ public class Reservation {
         this.departure = departure;
         this.partySize = partySize;
         this.bookedNightlyRate = room.rate();
-        this.status = CONFIRMED;
         this.paid = false;
+    }
+
+
+    /* Owner/staff; CONFIRMED and unpaid only. Ask Hotel to check dates and conflicts
+       excluding this booking, then replace both dates together. */
+    public void reschedule(LocalDate arrival, LocalDate departure, Session actor) throws HotelException
+    {
+        requireAccess(actor);
+        if (!status.equals("CONFIRMED"))
+        {
+            throw new HotelException("Reservation " + reservationId + " cannot be rescheduled. It is " + status + ".");
+        }
+        if (paid)
+        {
+            throw new HotelException("Reservation " + reservationId + " is already paid and cannot be rescheduled.");
+        }
+        if (arrival == null || departure == null)
+        {
+            throw new HotelException("Arrival and departure dates are required.");
+        }
+        if (arrival.isBefore(hotel.getCurrentDate()))
+        {
+            throw new HotelException("Arrival cannot be before today, " + hotel.getCurrentDate() + ".");
+        }
+        if (!departure.isAfter(arrival))
+        {
+            throw new HotelException("Departure must be after arrival.");
+        }
+        hotel.validateAvailability(room, arrival, departure, reservationId);
+        this.arrival = arrival;
+        this.departure = departure;
+    }
+
+    /* Owner/staff; CONFIRMED and unpaid only. Change status to CANCELLED. */
+    public void cancel(Session actor) throws HotelException
+    {
+        requireAccess(actor);
+        if (!status.equals("CONFIRMED"))
+        {
+            throw new HotelException("Reservation " + reservationId + " cannot be cancelled. It is " + status + ".");
+        }
+        if (paid)
+        {
+            throw new HotelException("Reservation " + reservationId + " is already paid and cannot be cancelled.");
+        }
+        status = "CANCELLED";
     }
 
     /* Return the immutable, non-sensitive reservation ID. */
@@ -62,13 +107,17 @@ public class Reservation {
     }
 
     /* Shared owner/staff guard, also used by this stay's service orders. */
-    void requireAccess(Session actor) throws HotelException 
+    void requireAccess(Session actor) throws HotelException
     {
-        requireSession(actor).requireGuestAccess(guest);
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
+        }
+        actor.requireGuestAccess(guest);
     }
 
     /* Authorize the owner or staff before returning the arrival date. */
-    public LocalDate getArrival(Session viewer) throws HotelException 
+    public LocalDate getArrival(Session viewer) throws HotelException
     {
         requireAccess(viewer);
         return arrival;
@@ -87,12 +136,14 @@ public class Reservation {
         requireAccess(viewer);
         return partySize;
     }
-    /* Authorize the owner or staff before returning the booking's lifecycle state */
-    public String getStatus(Session viewer) throws HotelException 
+
+    /* Authorize the owner or staff before returning the booking's lifecycle state. */
+    public String getStatus(Session viewer) throws HotelException
     {
         requireAccess(viewer);
         return status;
     }
+
     /* Package-private owner reference used by authorization and registry validation. */
     Guest guest()
     {
@@ -100,54 +151,33 @@ public class Reservation {
     }
 
     /* Package-private room reference used by conflict and removal checks. */
-    Room room() 
+    Room room()
     {
         return room;
     }
+
     /* Package-private start date used by calendar checks. */
-    LocalDate arrival() 
+    LocalDate arrival()
     {
         return arrival;
     }
 
     /* Package-private end date used by calendar checks. */
-    LocalDate departure() 
+    LocalDate departure()
     {
         return departure;
     }
 
     /* Package-private lifecycle state used by Hotel's shared checks. */
-    String status() 
+    String status()
     {
         return status;
     }
 
-    // Rejects missing dates, an arrival before today, and a departure that is not after arrival
-    private static void validateDates(LocalDate arrival, LocalDate departure, Hotel hotel) throws HotelException 
-    {
-        if (arrival == null || departure == null) {
-            throw new HotelException("Arrival and departure dates are required.");
-        }
-        if (arrival.isBefore(hotel.getCurrentDate())) {
-            throw new HotelException("Arrival cannot be before today, " + hotel.getCurrentDate() + ".");
-        }
-        if (!departure.isAfter(arrival)) {
-            throw new HotelException("Departure must be after arrival.");
-        }
-    }
-
-    // Rejects a missing session before any permission check
-    private static Session requireSession(Session session) throws AuthorizationException {
-        if (session == null) {
-            throw new AuthorizationException("You must be logged in.");
-        }
-        return session;
-    }
-
-
     /* Display reservation ID and lifecycle state; omit personal details and billing amounts. */
-    @Override 
-    public String toString() {
+    @Override
+    public String toString()
+    {
         return "Reservation " + reservationId + " | Status: " + status;
     }
 }
