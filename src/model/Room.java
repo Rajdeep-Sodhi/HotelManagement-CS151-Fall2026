@@ -41,10 +41,22 @@ public class Room {
     }
 
     /* On-duty staff change DIRTY to CLEANING. */
-    public void startCleaning(Session actor) throws HotelException
+    public void startCleaning(Session actor) throws HotelException {
+        requireSession(actor).requireOnDutyStaff();
+        if (!status.equals(DIRTY)) {
+            throw new HotelException("Only a DIRTY room can be cleaned. Room " + roomNumber + " is " + status + ".");
+        }
+        status = CLEANING;
+    }
 
     /* On-duty staff change CLEANING to READY. */
-    public void finishCleaning(Session actor) throws HotelException
+    public void finishCleaning(Session actor) throws HotelException {
+        requireSession(actor).requireOnDutyStaff();
+        if (!status.equals(CLEANING)) {
+            throw new HotelException("Room " + roomNumber + " is not being cleaned.");
+        }
+        status = READY;
+    }
 
     /* Manager changes READY/DIRTY to OUT_OF_SERVICE only if Hotel has no active booking for
        this room; remember the prior readiness state. */
