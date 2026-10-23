@@ -1,124 +1,181 @@
 package model;
 
-public class Employee extends Person {
+import exception.AuthorizationException;
+import exception.HotelException;
 
-    // Basic information for each hotel employee
-    private int employeeID;
-    private String position;
-    private double salary;
-    private String shift;
-    private boolean onDuty;
+public class Employee 
+{
 
-    // Creates an employee with the information provided
-    public Employee(String name, int age, String gender, String phoneNumber, String email,
-                    int employeeID, String position, double salary, String shift) {
-        super(name, age, gender, phoneNumber, email);
+    // Represents staff duty and arrival/departure responsibilities.
+    private final int employeeId; // Immutable employee identifier.
+    private final String name; // Validated, trimmed employee name.
+    private final String email; // Validated, normalized email; unique among registered employees.
+    private final boolean manager; // Immutable manager permission flag; no separate Manager or Person class.
+    private boolean onDuty; // Whether this employee has clocked in.
 
-        if (employeeID <= 0) {
-            throw new IllegalArgumentException("Employee ID must be positive.");
+
+    /* Validate positive ID, trimmed name, and normalized email; capture the manager flag and
+       begin off duty. */
+    Employee(int id, String name, String email, boolean manager) throws HotelException
+    {
+        if (id <= 0)
+        {
+            throw new HotelException("Employee ID must be positive.");
         }
-        if (salary < 0) {
-            throw new IllegalArgumentException("Salary cannot be negative.");
+        if (name == null || name.trim().isEmpty())
+        {
+            throw new HotelException("Employee name cannot be blank.");
         }
-
-        this.employeeID = employeeID;
-        this.position = position;
-        this.salary = salary;
-        this.shift = shift;
+        if (email == null)
+        {
+            throw new HotelException("Employee email is required.");
+        }
+        String cleanEmail = email.trim().toLowerCase();
+        if (!cleanEmail.matches("[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}"))
+        {
+            throw new HotelException("Enter a valid employee email address.");
+        }
+        this.employeeId = id;
+        this.name = name.trim();
+        this.email = cleanEmail;
+        this.manager = manager;
         this.onDuty = false;
     }
 
-    // Returns the employee ID
-    public int getEmployeeID() {
-        return employeeID;
-    }
-
-    // Returns the employee's position
-    public String getPosition() {
-        return position;
-    }
-
-    // Returns the employee's salary
-    public double getSalary() {
-        return salary;
-    }
-
-    // Returns the employee's shift
-    public String getShift() {
-        return shift;
-    }
-
-    // Checks if the employee is currently on duty
-    public boolean isOnDuty() {
-        return onDuty;
-    }
-
-    // Updates the position if one was provided
-    public void setPosition(String position) {
-        if (position != null && !position.trim().isEmpty()) {
-            this.position = position;
+    /* Require this employee's own active session and reject an already on-duty employee
+       before setting onDuty to true. */
+    public void clockIn(Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
         }
-    }
-
-    // Makes sure the salary cannot be negative
-    public void setSalary(double salary) {
-        if (salary >= 0) {
-            this.salary = salary;
+        if (actor.getRole().equals("GUEST") || actor.getPersonId() != employeeId)
+        {
+            throw new AuthorizationException("Employees can only clock themselves in.");
         }
-    }
-
-    // Updates the shift if one was provided
-    public void setShift(String shift) {
-        if (shift != null && !shift.trim().isEmpty()) {
-            this.shift = shift;
+        if (onDuty)
+        {
+            throw new HotelException("Employee " + employeeId + " is already clocked in.");
         }
-    }
-
-    // Marks the employee as on duty at the start of a shift
-    public void clockIn() {
         onDuty = true;
     }
 
-    // Marks the employee as off duty at the end of a shift
-    public void clockOut() {
+    /* Require this employee's own active session and reject an already off-duty employee
+       before setting onDuty to false. */
+    public void clockOut(Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
+        }
+        if (actor.getRole().equals("GUEST") || actor.getPersonId() != employeeId)
+        {
+            throw new AuthorizationException("Employees can only clock themselves out.");
+        }
+        if (!onDuty)
+        {
+            throw new HotelException("Employee " + employeeId + " is already clocked out.");
+        }
         onDuty = false;
     }
 
-    // Increases the salary by the given percentage
-    public void giveRaise(double percent) {
-        if (percent > 0) {
-            salary += salary * percent / 100;
+    /* Require this employee's own active session and on-duty status, then call the
+       reservation's validated check-in transition. */
+    public void checkInGuest(Reservation reservation, Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
         }
+        if (actor.getRole().equals("GUEST") || actor.getPersonId() != employeeId)
+        {
+            throw new AuthorizationException("Employees can only check in guests from their own account.");
+        }
+        if (!onDuty)
+        {
+            throw new HotelException("Employee " + employeeId + " must clock in before checking in a guest.");
+        }
+        if (reservation == null)
+        {
+            throw new HotelException("A reservation is required.");
+        }
+        reservation.checkIn(actor);
     }
 
-    // Checks a guest into a room if the employee is on duty and the room is free
-    public boolean checkInGuest(Room room) {
-        if (!onDuty || room == null || !room.isAvailable()) {
-            return false;
+    /* Require this employee's own active session and on-duty status, then call the
+       reservation's validated checkout transition. */
+    public void checkOutGuest(Reservation reservation, Session actor) throws HotelException
+    {
+        if (actor == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
         }
-
-        room.markOccupied();
-        return true;
+        if (actor.getRole().equals("GUEST") || actor.getPersonId() != employeeId)
+        {
+            throw new AuthorizationException("Employees can only check out guests from their own account.");
+        }
+        if (!onDuty)
+        {
+            throw new HotelException("Employee " + employeeId + " must clock in before checking out a guest.");
+        }
+        if (reservation == null)
+        {
+            throw new HotelException("A reservation is required.");
+        }
+        reservation.checkOut(actor);
     }
 
-    // Checks a guest out of a room if the employee is on duty and the room is occupied
-    public boolean checkOutGuest(Room room) {
-        if (!onDuty || room == null || room.isAvailable()) {
-            return false;
+    /* Return the name only to this employee or a manager. */
+    public String getName(Session viewer) throws HotelException
+    {
+        if (viewer == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
         }
-
-        room.markAvailable();
-        return true;
+        viewer.requireEmployeeAccess(this);
+        return name;
     }
 
-    // Displays the shared information followed by the employee details
+    /* Return the email only to this employee or a manager. */
+    public String getEmail(Session viewer) throws HotelException
+    {
+        if (viewer == null)
+        {
+            throw new AuthorizationException("You must be logged in.");
+        }
+        viewer.requireEmployeeAccess(this);
+        return email;
+    }
+
+    /* Return the immutable, non-sensitive lookup ID. */
+    public int getEmployeeId()
+    {
+        return employeeId;
+    }
+
+    /* Package-private role helper for Account and Session; no public role setter. */
+    boolean isManager()
+    {
+        return manager;
+    }
+
+    /* Package-private duty helper for authorized staff operations. */
+    boolean isOnDuty()
+    {
+        return onDuty;
+    }
+
+    /* Package-private normalized email used by Hotel's duplicate checks. */
+    String identityEmail()
+    {
+        return email;
+    }
+
+    /* Display employee ID, manager flag, and duty state; omit private contact details. */
     @Override
-    public void displayInfo() {
-        super.displayInfo();
-        System.out.println("Employee ID: " + employeeID);
-        System.out.println("Position: " + position);
-        System.out.printf("Salary: $%.2f%n", salary);
-        System.out.println("Shift: " + shift);
-        System.out.println("On Duty: " + onDuty);
+    public String toString()
+    {
+        return "Employee " + employeeId + " | Manager: " + manager + " | On Duty: " + onDuty;
     }
 }
