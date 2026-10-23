@@ -27,7 +27,7 @@ class GuestReservationTest
 
 	// tests if back to back reservations are allowed
 	@Test
-	void allowsBackToBackStays() throws HotelException
+	void allowsBackToBackStaysTest() throws HotelException
 	{
 		LocalDate arrival = hotel.getCurrentDate().plusDays(1);
 		LocalDate sharedDate = arrival.plusDays(2);
@@ -44,7 +44,7 @@ class GuestReservationTest
 	
 	// tests if bad room bookings are rejected
 	@Test
-	void rejectsBadBookings() throws HotelException
+	void rejectsBadBookingsTest() throws HotelException
 	{
 		LocalDate arrival = hotel.getCurrentDate().plusDays(2);
 
@@ -122,7 +122,7 @@ class GuestReservationTest
 	
 	// checks If changing reservation dates fail, original dates are kept
 	@Test
-	void keepsDatesAfterFailedChange() throws HotelException
+	void keepsDatesAfterFailedChangeTest() throws HotelException
 	{
 		LocalDate today = hotel.getCurrentDate();
 
@@ -147,6 +147,46 @@ class GuestReservationTest
 
 		assertEquals(today.plusDays(1), firstRes.getArrival(session));
 		assertEquals(today.plusDays(3), firstRes.getDeparture(session));
+	}
+	
+	//makes sure that guests cannot change reservations they paid for
+	@Test
+	void preventsChangesToPaidBookingsTest() throws HotelException
+	{
+		LocalDate arrival = hotel.getCurrentDate().plusDays(1);
+
+		Reservation res = guest.makeReservation(101, arrival, arrival.plusDays(2), 2, session);
+
+		double due = res.getAmountDue(session);
+		hotel.payCash(res, due, session);
+
+		assertEquals(0.0, res.getAmountDue(session), 0.001);
+
+		try
+		{
+			guest.cancelReservation(res, session);
+
+			fail("Paid reservations should not be cancelled.");
+		}
+		catch (HotelException ex)
+		{
+			// Expected cancellation rejection.
+		}
+
+		try
+		{
+			guest.rescheduleReservation(
+					res, arrival.plusDays(3),
+					arrival.plusDays(5), session);
+
+			fail("Paid reservations should not be rescheduled.");
+		}
+		catch (HotelException ex)
+		{
+			// Expected reschedule rejection.
+		}
+
+		assertEquals("CONFIRMED", res.getStatus(session));
 	}
 
 
