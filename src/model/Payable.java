@@ -1,13 +1,11 @@
 package model;
 
+import exception.HotelException;
+
 public interface Payable {
 
-    // Processes the payment
-    void processPayment();
+    public double getAmountDue(Session viewer) throws HotelException;
 
-    // Refunds the payment
-    void refundPayment();
+    public void pay(Payment payment, Session actor) throws HotelException;
 
-    // Displays the payment receipt
-    void displayReceipt();
 }
