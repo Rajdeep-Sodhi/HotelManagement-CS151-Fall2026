@@ -41,6 +41,85 @@ class GuestReservationTest
 		assertEquals(sharedDate, firstRes.getDeparture(session));
 		assertEquals(sharedDate, nextRes.getArrival(session));
 	}
+	
+	// tests if bad room bookings are rejected
+	@Test
+	void rejectsBadBookings() throws HotelException
+	{
+		LocalDate arrival = hotel.getCurrentDate().plusDays(2);
+
+		guest.makeReservation(
+				101, arrival, arrival.plusDays(3), 2, session);
+
+		//checks if overlapping bookings are rejeceted
+		try
+		{
+			guest.makeReservation(
+					101, arrival.plusDays(1),
+					arrival.plusDays(4), 1, session);
+
+			fail("Overlapping bookings should be rejected.");
+		}
+		catch (BookingConflictException ex)
+		{
+			
+		}
+		
+		//checks if overlapping bookings are rejected
+		try
+		{
+			guest.makeReservation(
+					101, arrival, arrival.plusDays(3), 2, session);
+
+			fail("Duplicate bookings should be rejected.");
+		}
+		catch (HotelException ex)
+		{
+			
+		}
+		
+		//checks if old arrival dates get rejected
+		try
+		{
+			guest.makeReservation(
+					101, arrival.minusDays(3),
+					arrival.plusDays(1), 1, session);
+
+			fail("Past arrival dates should be rejected.");
+		}
+		catch (HotelException ex)
+		{
+			
+		}
+
+		//checks that departure dates are after arrival dates
+		try
+		{
+			guest.makeReservation(
+					101, arrival, arrival, 1, session);
+
+			fail("Departure must follow arrival.");
+		}
+		catch (HotelException ex)
+		{
+			
+		}
+
+		//checks if groups that exceed room capacity are't able to book that room
+		try
+		{
+			guest.makeReservation(
+					102, arrival.plusDays(4),
+					arrival.plusDays(5), 4, session);
+
+			fail("Groups exceeding room capacity should be rejected.");
+		}
+		catch (HotelException ex)
+		{
+			
+		}
+	}
+
 
 }
 
