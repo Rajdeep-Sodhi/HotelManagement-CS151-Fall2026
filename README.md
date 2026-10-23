@@ -29,7 +29,7 @@ Raj
 - `test/ui/LoginTest.java`
 - Root-level UML diagram (`uml.png` or `uml.pdf`)
 
-Christy
+Kristy
 - `src/model/Employee.java`
 - `src/model/Room.java`
 - `src/model/Reservation.java`
