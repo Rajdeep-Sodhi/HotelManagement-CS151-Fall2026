@@ -1,165 +1,196 @@
 package ui;
 
-import java.util.Scanner;
-import java.util.HashMap;
-import java.util.Map;
+import exception.HotelException;
+import model.Employee;
 import model.Guest;
+import model.Hotel;
+import model.Payable;
+import model.Payment;
 import model.Reservation;
 import model.Room;
+import model.ServiceOrder;
+import model.Session;
+
+import java.time.LocalDate;
 
 public class Login {
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final Map<String, String> accounts = new HashMap<>();
-    private static final Guest guest = new Guest(1, "Guest", 18, "", "", "");
-    private static final Room room = new Room(101, "Standard", 100, 2);
+    private final Hotel hotel;
+    private final InputHelper input;
+    private Session session;
 
-    public static void main(String[] args) {
-        System.out.println("=== Hotel Management Login ===");
-        System.out.println("Format: role, username, password (one entry per line)");
-        System.out.println("Roles: guest | employee | manager");
-        System.out.println("Example: guest / guest / guest123");
-        accounts.put("guest:guest", "guest123");
-        accounts.put("employee:employee", "employee123");
-        accounts.put("manager:manager", "manager123");
-
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            System.out.print("Role (guest/employee/manager): ");
-            String role = scanner.nextLine().toLowerCase();
-            if (!validRole(role)) {
-                System.out.println("Invalid role.");
-                continue;
-            }
-            System.out.println("1 - Login");
-            System.out.println("2 - Create account");
-            System.out.print("Choose an option: ");
-            String option = scanner.nextLine();
-
-            if (option.equals("2")) {
-                if (createAccount(role)) openMenu(role);
-                return;
-            }
-            if (!option.equals("1")) {
-                System.out.println("Invalid option.");
-                continue;
-            }
-
-            System.out.print("Username: ");
-            String username = scanner.nextLine();
-            System.out.print("Password: ");
-            String password = scanner.nextLine();
-
-            if (validLogin(role, username, password)) {
-                openMenu(role);
-                return;
-            }
-            System.out.println("Invalid login.");
+    public Login(Hotel hotel, InputHelper input) {
+        if (hotel == null || input == null) {
+            throw new IllegalArgumentException("Hotel and input helper are required.");
         }
-        System.out.println("Too many failed attempts.");
+        this.hotel = hotel;
+        this.input = input;
     }
 
-    private static boolean validLogin(String role, String username, String password) {
-        return password.equals(accounts.get(role + ":" + username));
-    }
-
-    private static boolean validRole(String role) {
-        return role.equals("guest") || role.equals("employee") || role.equals("manager");
-    }
-
-    private static boolean createAccount(String role) {
-        System.out.print("New username: ");
-        String username = scanner.nextLine();
-        if (accounts.containsKey(role + ":" + username)) {
-            System.out.println("That account already exists.");
-            return false;
-        }
-        System.out.print("New password: ");
-        String password = scanner.nextLine();
-        accounts.put(role + ":" + username, password);
-        System.out.println("Account created for " + role + ".");
-        return true;
-    }
-
-    private static void openMenu(String role) {
-        if (role.equals("guest")) guestLogin();
-        else if (role.equals("employee")) employeeLogin();
-        else managerLogin();
-    }
-
-    public static void guestLogin() {
-        System.out.println("Guest login successful.");
+    public void run() {
         while (true) {
-            System.out.println("\nGuest options:");
-            System.out.println("1 - Make reservation");
-            System.out.println("2 - Check in");
-            System.out.println("3 - Check out");
-            System.out.println("4 - View reservation");
-            System.out.println("5 - Logout");
-            System.out.print("Enter one menu number: ");
-            String choice = scanner.nextLine();
-            if (choice.equals("1")) makeReservation();
-            else if (choice.equals("2")) checkIn();
-            else if (choice.equals("3")) checkOut();
-            else if (choice.equals("4")) viewReservation();
-            else if (choice.equals("5")) return;
-            else System.out.println("Invalid choice.");
+            try {
+                if (session == null) {
+                    rootMenu();
+                } else {
+                    String role = session.getRole();
+                    if ("GUEST".equals(role)) guestMenu();
+                    else if ("EMPLOYEE".equals(role)) employeeMenu();
+                    else managerMenu();
+                }
+            } catch (HotelException exception) {
+                System.out.println(exception.getMessage());
+            }
         }
     }
 
-    public static void makeReservation() {
-        if (guest.getReservation() != null) {
-            System.out.println("You already have a reservation.");
+    private void rootMenu() throws HotelException {
+        System.out.println("\n1 - Log in\n2 - Register guest account\n0 - Exit");
+        int choice = input.readInt("Choose an option: ", 0, 2);
+        if (choice == 0) throw new ExitRequestedException();
+        if (choice == 1) {
+            session = hotel.login(input.readRequiredText("Username: "), input.readLine("Password: "));
+            System.out.println("Login successful.");
             return;
         }
-        System.out.println("Enter dates as whole numbers, for example: 1 then 3");
-        System.out.print("Check-in day (integer): ");
-        int checkIn = Integer.parseInt(scanner.nextLine());
-        System.out.print("Check-out day (integer): ");
-        int checkOut = Integer.parseInt(scanner.nextLine());
-        try {
-            guest.makeReservation(1, room, checkIn, checkOut);
-            System.out.println("Reservation created.");
-        } catch (IllegalArgumentException exception) {
-            System.out.println(exception.getMessage());
-        }
+        hotel.registerGuestAccount(input.readRequiredText("Guest name: "),
+                input.readRequiredText("Email: "), input.readRequiredText("Phone: "),
+                input.readRequiredText("Username: "), input.readLine("Password: "));
+        System.out.println("Guest account created.");
     }
 
-    public static void checkIn() {
-        Reservation reservation = guest.getReservation();
-        if (reservation == null) System.out.println("Make a reservation first.");
-        else if (!room.isAvailable()) System.out.println("You are already checked in.");
-        else {
-            room.markOccupied();
-            System.out.println("Guest checked in.");
-        }
+    private void guestMenu() throws HotelException {
+        Guest guest = hotel.findGuest(session.getPersonId(), session);
+        System.out.println("\n1 - Reservations\n2 - Profile\n3 - Change password\n0 - Logout");
+        int choice = input.readInt("Choose an option: ", 0, 3);
+        if (choice == 0) logout();
+        else if (choice == 1) reservationMenu(guest);
+        else if (choice == 2) System.out.println(guest);
+        else changePassword();
     }
 
-    public static void checkOut() {
-        if (guest.getReservation() == null || room.isAvailable()) {
-            System.out.println("You are not checked in.");
+    private void employeeMenu() throws HotelException {
+        Employee employee = hotel.findEmployee(session.getPersonId(), session);
+        System.out.println("\n1 - Clock in\n2 - Clock out\n3 - Check in\n4 - Check out\n"
+                + "5 - Clean room\n6 - Find guest\n0 - Logout");
+        int choice = input.readInt("Choose an option: ", 0, 6);
+        if (choice == 0) logout();
+        else if (choice == 1) employee.clockIn(session);
+        else if (choice == 2) employee.clockOut(session);
+        else if (choice == 3 || choice == 4) {
+            Reservation reservation = hotel.findReservation(id("Reservation ID: "), session);
+            if (choice == 3) employee.checkInGuest(reservation, session);
+            else employee.checkOutGuest(reservation, session);
+        } else if (choice == 5) {
+            Room room = hotel.findRoom(id("Room number: "), session);
+            room.startCleaning(session);
+            room.finishCleaning(session);
         } else {
-            room.markAvailable();
-            System.out.println("Guest checked out.");
+            System.out.println(hotel.findGuest(id("Guest ID: "), session));
         }
     }
 
-    public static void viewReservation() {
-        if (guest.getReservation() == null) System.out.println("No reservation found.");
-        else guest.getReservation().displayInfo();
+    private void managerMenu() throws HotelException {
+        System.out.println("\n1 - Staff actions\n2 - Add room\n3 - Hire employee\n"
+                + "4 - Summary\n5 - Advance date\n0 - Logout");
+        int choice = input.readInt("Choose an option: ", 0, 5);
+        if (choice == 0) logout();
+        else if (choice == 1) employeeMenu();
+        else if (choice == 2) {
+            hotel.addRoom(id("Room number: "), input.readInt("Capacity: ", 1, Integer.MAX_VALUE),
+                    input.readMoney("Nightly rate: ", false), session);
+        } else if (choice == 3) {
+            hotel.hireEmployee(input.readRequiredText("Name: "),
+                    input.readRequiredText("Email: "), input.readYesNo("Manager? (yes/no): "), session);
+        } else if (choice == 4) {
+            System.out.println(hotel.summary(session));
+        } else {
+            hotel.advanceDate(input.readDate("New date (YYYY-MM-DD): "), session);
+        }
     }
 
-    public static void employeeLogin() {
-        System.out.println("Employee login successful.");
-        System.out.println("Employee options: 1 - View room status, 2 - Logout");
-        System.out.print("Enter one menu number: ");
-        if (scanner.nextLine().equals("1")) System.out.println(room);
+    private void reservationMenu(Guest guest) throws HotelException {
+        System.out.println("\n1 - List\n2 - Search/book\n3 - Reschedule\n4 - Cancel\n5 - Pay\n6 - Services\n0 - Back");
+        int choice = input.readInt("Choose an option: ", 0, 6);
+        if (choice == 0) return;
+        if (choice == 1) {
+            for (Reservation reservation : guest.getReservations(session)) System.out.println(reservation);
+            return;
+        }
+        if (choice == 2) {
+            LocalDate arrival = input.readDate("Arrival (YYYY-MM-DD): ");
+            LocalDate departure = input.readDate("Departure (YYYY-MM-DD): ");
+            int partySize = input.readInt("Party size: ", 1, Integer.MAX_VALUE);
+            for (Room room : hotel.searchRooms(arrival, departure, partySize, session)) {
+                System.out.println(room);
+            }
+            if (input.readYesNo("Book a room? (yes/no): ")) {
+                guest.makeReservation(id("Room number: "), arrival, departure, partySize, session);
+            }
+            return;
+        }
+        Reservation reservation = hotel.findReservation(id("Reservation ID: "), session);
+        if (choice == 3) {
+            reservation.reschedule(input.readDate("New arrival (YYYY-MM-DD): "),
+                    input.readDate("New departure (YYYY-MM-DD): "), session);
+        } else if (choice == 4) {
+            reservation.cancel(session);
+        } else if (choice == 5) {
+            paymentMenu(reservation);
+        } else {
+            serviceMenu(reservation);
+        }
     }
 
-    public static void managerLogin() {
-        System.out.println("Manager login successful.");
-        System.out.println("Manager options: 1 - View room status, 2 - View reservation, 3 - Logout");
-        System.out.print("Enter one menu number: ");
-        String choice = scanner.nextLine();
-        if (choice.equals("1")) System.out.println(room);
-        else if (choice.equals("2")) viewReservation();
+    private void serviceMenu(Reservation reservation) throws HotelException {
+        System.out.println(ServiceOrder.catalog());
+        System.out.println("1 - Create order\n2 - Pay order\n3 - Complete order\n0 - Back");
+        int choice = input.readInt("Choose an option: ", 0, 3);
+        if (choice == 0) return;
+        if (choice == 1) {
+            hotel.createServiceOrder(reservation.getReservationId(), input.readRequiredText("Service: "),
+                    input.readInt("Quantity: ", 1, Integer.MAX_VALUE), session);
+        } else {
+            ServiceOrder order = hotel.findServiceOrder(id("Order ID: "), session);
+            if (choice == 2) paymentMenu(order);
+            else order.complete(session);
+        }
+    }
+
+    private void paymentMenu(Payable purchase) throws HotelException {
+        double due = purchase.getAmountDue(session);
+        if (due <= 0) return;
+        System.out.printf("Amount due: $%.2f%n1 - Cash\n2 - Card\n0 - Back%n", due);
+        int choice = input.readInt("Payment type: ", 0, 2);
+        if (choice == 0) return;
+        Payment payment;
+        if (choice == 1) {
+            payment = hotel.payCash(purchase, input.readMoney("Cash tendered: ", false), session);
+        } else {
+            payment = hotel.payCard(purchase, input.readYesNo("Card approved? (yes/no): "), session);
+        }
+        System.out.println(payment.receipt(session));
+    }
+
+    private int id(String prompt) {
+        return input.readInt(prompt, 1, Integer.MAX_VALUE);
+    }
+
+    private void changePassword() throws HotelException {
+        session.changePassword(input.readLine("Current password: "), input.readLine("New password: "));
+    }
+
+    private void logout() {
+        session.logout();
+        session = null;
+    }
+
+    @Override
+    public String toString() {
+        if (session == null) return "Login{authenticated=false}";
+        try {
+            return "Login{authenticated=true, role=" + session.getRole() + "}";
+        } catch (HotelException exception) {
+            return "Login{authenticated=false}";
+        }
     }
 }
