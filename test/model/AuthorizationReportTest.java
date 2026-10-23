@@ -168,7 +168,7 @@ class AuthorizationTest
 	
 	//checks if new singups create just guest accounts, not manager or employee
 	@Test
-	void signupCreatesGuestAccounts() throws HotelException
+	void signupCreatesGuestAccountsTest() throws HotelException
 	{
 		Guest newGuest = hotel.registerGuestAccount( "New Guest", "new@guest.example", "4085559876", "newguest", "newpass123");
 
@@ -187,6 +187,57 @@ class AuthorizationTest
 		catch (AuthorizationException ex)
 		{
 			
+		}
+	}
+	//checks current user session is the one performing actions
+	@Test
+	void blocksOldSessionsTest() throws HotelException
+	{
+		Session oldSession = hotel.login("guest", "guest123");
+		Session newSession = hotel.login("guest2", "guest234");
+
+		try
+		{
+			oldSession.getRole();
+			fail("A replaced session should not return a role.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			hotel.findRoom(101, oldSession);
+			fail("A replaced session should not access hotel records.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		assertEquals("GUEST", newSession.getRole());
+
+		newSession.logout();
+
+		try
+		{
+			newSession.getPersonId();
+			fail("A logged-out session should not return a person ID.");
+		}
+		catch (AuthorizationException ex)
+		{
+			
+		}
+
+		try
+		{
+			hotel.findRoom(101, newSession);
+			fail("A logged-out session should not access hotel records.");
+		}
+		catch (AuthorizationException ex)
+		{
+		
 		}
 	}
 
