@@ -4,7 +4,7 @@ import exception.HotelException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServiceOrder
+public class ServiceOrder implements Payable
 {
 
     // Stores the services ordered for one checked-in reservation.
@@ -186,6 +186,60 @@ public class ServiceOrder
         }
 
         status = "CANCELLED";
+    }
+        // Calculates the unpaid total for all services in this order.
+    @Override
+    public double getAmountDue(Session viewer) throws HotelException
+    {
+        reservation.requireAccess(viewer);
+
+        if (paid || status.equals("CANCELLED"))
+        {
+            return 0.0;
+        }
+
+        double total = 0.0;
+
+        for (Map.Entry<String, Integer> entry : items.entrySet())
+        {
+            if (entry.getKey().equals("LAUNDRY"))
+            {
+                total += LAUNDRY_PRICE * entry.getValue();
+            }
+            else if (entry.getKey().equals("ROOM_SERVICE"))
+            {
+                total += ROOM_SERVICE_PRICE * entry.getValue();
+            }
+        }
+
+        return Math.round(total * 100.0) / 100.0;
+    }
+
+    // Processes a full payment for a completed service order.
+    @Override
+    public void pay(Payment payment, Session actor) throws HotelException
+    {
+        reservation.requireAccess(actor);
+
+        if (!status.equals("COMPLETED"))
+        {
+            throw new HotelException(
+                    "Service order must be completed before payment.");
+        }
+
+        if (paid)
+        {
+            throw new HotelException(
+                    "Service order has already been paid.");
+        }
+
+        if (payment == null)
+        {
+            throw new HotelException("A payment is required.");
+        }
+
+        payment.process(this, getAmountDue(actor));
+        paid = true;
     }
 
 }
