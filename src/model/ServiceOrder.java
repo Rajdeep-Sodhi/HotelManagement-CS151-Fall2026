@@ -241,5 +241,40 @@ public class ServiceOrder implements Payable
         payment.process(this, getAmountDue(actor));
         paid = true;
     }
+        // Returns the service order ID.
+    public int getOrderId()
+    {
+        return orderId;
+    }
+
+    // Returns the reservation this service order belongs to.
+    Reservation reservation()
+    {
+        return reservation;
+    }
+
+    // Returns the current order status for hotel checks.
+    String status()
+    {
+        return status;
+    }
+
+    // Shows the services that guests can order.
+    public static String catalog()
+    {
+        return String.format(
+                "LAUNDRY - $%.2f%nROOM_SERVICE - $%.2f",
+                LAUNDRY_PRICE, ROOM_SERVICE_PRICE);
+    }
+
+    // Displays basic order information without exposing guest details.
+    @Override
+    public String toString()
+    {
+        return "ServiceOrder{id=" + orderId
+                + ", status='" + status
+                + "', paid=" + paid
+                + ", items=" + items + "}";
+    }
 
 }
