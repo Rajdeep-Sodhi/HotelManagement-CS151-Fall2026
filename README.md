@@ -19,6 +19,7 @@ Yash
 - `test/model/GuestReservationTest.java`
 - `test/model/AuthorizationTest.java`
 - `README.md`
+- `pom.xml`
 
 Raj
 - `src/model/Payable.java`
@@ -29,7 +30,7 @@ Raj
 - `test/ui/LoginTest.java`
 - Root-level UML diagram (`uml.png` or `uml.pdf`)
 
-Christy
+Kristy
 - `src/model/Employee.java`
 - `src/model/Room.java`
 - `src/model/Reservation.java`
@@ -46,6 +47,19 @@ Bhoomika
 - `src/exception/AuthorizationException.java`
 - `test/model/HotelTest.java`
 - `test/model/PaymentServiceTest.java`
+- `README.md`
+
+  ## Contributions
+
+Yash focused on the central hotel workflow, guest functionality, cash payments, application startup, booking conflict handling, and related tests.
+
+Raj focused on the payment abstraction and interface, card payments, the console menu system, base hotel exceptions, login tests, and the final UML diagram.
+
+Kristy focused on employee and room operations, reservations, validated user input, capacity handling, and staff, room, and input tests.
+
+Bhoomika focused on account and session authorization, service orders, authorization and exit exceptions, hotel registry tests, and payment and service-order tests.
+
+All team members contributed to integration, debugging, design discussions, testing, and reviewing how the classes interact.
 
 ## Design
 
@@ -61,12 +75,11 @@ All fields are private. Authorized getters protect personal and billing informat
 
 ## Installation Instructions
 
-Download the repository from `https://github.com/Rajdeep-Sodhi/CS151-Hotel_Management` or clone it:
+Download the repository from `https://github.com/Rajdeep-Sodhi/HotelManagement-CS151-Fall2026` or clone it:
 
 ```bash
-git clone https://github.com/Rajdeep-Sodhi/CS151-Hotel_Management.git
-cd CS151-Hotel_Management
-```
+git clone https://github.com/Rajdeep-Sodhi/HotelManagement-CS151-Fall2026.git
+cd HotelManagement-CS151-Fall2026
 
 Install JDK 17 or newer. Maven is needed to run the JUnit 5 tests.
 
@@ -90,7 +103,7 @@ The second option runs the application without the JUnit tests. On Windows Comma
 
 ## Usage
 
-Start the program using either installation option. The application begins with two rooms, one manager account, one employee account, and two guest accounts. Demo logins are:
+Start the program using either installation option. The application begins with two rooms, one manager account, one employee account, and two guest accounts. Demo logins are(username / password):
 
 ```text
 manager  / manager123
