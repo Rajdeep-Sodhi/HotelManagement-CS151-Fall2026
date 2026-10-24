@@ -1,6 +1,6 @@
 <mxfile host="Electron" pages="5">
   <diagram name="Model" id="model-current">
-    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="3340" pageHeight="2500" math="0" shadow="0">
+    <mxGraphModel dx="2828" dy="1824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3340" pageHeight="2500" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -455,7 +455,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Exceptions" id="exception-hierarchy">
-    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="2840" pageHeight="1400" math="0" shadow="0">
+    <mxGraphModel dx="2828" dy="1824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2840" pageHeight="1400" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -469,10 +469,10 @@
           <mxGeometry height="24" width="620" y="54" as="geometry" />
         </mxCell>
         <mxCell id="exception-hierarchy-Exception-divider" parent="exception-hierarchy-Exception" style="line;strokeWidth=1;strokeColor=#6c8ebf;" value="" vertex="1">
-          <mxGeometry height="1" width="620" y="78" as="geometry" />
+          <mxGeometry height="1" width="530" y="78" as="geometry" />
         </mxCell>
         <mxCell id="exception-hierarchy-Exception-operations" parent="exception-hierarchy-Exception" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=10;spacingRight=10;spacingTop=7;fontSize=13;overflow=hidden;whiteSpace=nowrap;" value="" vertex="1">
-          <mxGeometry height="28" width="620" y="78" as="geometry" />
+          <mxGeometry height="28" width="530" y="78" as="geometry" />
         </mxCell>
         <mxCell id="exception-hierarchy-RuntimeException" parent="1" style="swimlane;html=1;startSize=54;horizontal=1;collapsible=0;rounded=0;align=center;verticalAlign=middle;fontStyle=1;fontSize=14;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;" value="RuntimeException" vertex="1">
           <mxGeometry height="106" width="720" x="2060" y="420" as="geometry" />
